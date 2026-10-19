@@ -2,11 +2,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
     const store = {
-        get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-        set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+        get(key) {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                return null;
+            }
+        },
+        set(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+            }
+        }
     };
 
-    /* ---------- 1. DAY / NIGHT MODE ---------- */
     const root = document.documentElement;
     const toggle = $("#themeToggle");
     function applyTheme(theme) {
@@ -35,80 +45,86 @@ document.addEventListener("DOMContentLoaded", function () {
     const year = $("#currentYear");
     if (year) year.textContent = new Date().getFullYear();
 
-    /* ---------- DATA (JSON-style) ---------- */
     const DESTINATIONS = [
         {
-                "title": "Maletsunyane Falls",
-                "cat": "Nature",
-                "img": "destination-maletsunyane.jpg",
-                "alt": "Maletsunyane Falls dropping into a green gorge",
-                "text": "A tall waterfall surrounded by the dramatic scenery near Semonkong.",
-                "badge": "Popular"
+            title: "Maletsunyane Falls",
+            cat: "Nature",
+            img: "destination-maletsunyane.jpg",
+            alt: "Maletsunyane Falls dropping into a green gorge",
+            text: "A tall waterfall surrounded by the dramatic scenery near Semonkong.",
+            badge: "Popular"
         },
         {
-                "title": "Katse Dam",
-                "cat": "Nature",
-                "img": "destination-katse.jpg",
-                "alt": "Katse Dam and its spillway among the mountains",
-                "text": "A large dam in the Maloti highlands with impressive views."
+            title: "Katse Dam",
+            cat: "Nature",
+            img: "destination-katse.jpg",
+            alt: "Katse Dam and its spillway among the mountains",
+            text: "A large dam in the Maloti highlands with impressive views."
         },
         {
-                "title": "Mohale Dam",
-                "cat": "Nature",
-                "img": "destination-mohale.jpg",
-                "alt": "Mohale Dam reservoir under a blue sky",
-                "text": "Calm blue water surrounded by open mountain country."
+            title: "Mohale Dam",
+            cat: "Nature",
+            img: "destination-mohale.jpg",
+            alt: "Mohale Dam reservoir under a blue sky",
+            text: "Calm blue water surrounded by open mountain country."
         },
         {
-                "title": "Sani Pass",
-                "cat": "Adventure",
-                "img": "destination-sani-pass.jpg",
-                "alt": "The winding Sani Pass road in the mountains",
-                "text": "A famous winding mountain road for adventurous travellers."
+            title: "Sani Pass",
+            cat: "Adventure",
+            img: "destination-sani-pass.jpg",
+            alt: "The winding Sani Pass road in the mountains",
+            text: "A famous winding mountain road for adventurous travellers."
         },
         {
-                "title": "Afriski",
-                "cat": "Adventure",
-                "img": "destination-afriski.jpg",
-                "alt": "Snow-covered slopes at Afriski mountain resort",
-                "text": "A high mountain resort known for snow and winter fun."
+            title: "Afriski",
+            cat: "Adventure",
+            img: "destination-afriski.jpg",
+            alt: "Snow-covered slopes at Afriski mountain resort",
+            text: "A high mountain resort known for snow and winter fun."
         },
         {
-                "title": "Bokong",
-                "cat": "Nature",
-                "img": "destination-bokong.jpg",
-                "alt": "The Bokong viewpoint above a misty mountain valley",
-                "text": "A high-altitude nature area with wide valley views."
+            title: "Bokong",
+            cat: "Nature",
+            img: "destination-bokong.jpg",
+            alt: "The Bokong viewpoint above a misty mountain valley",
+            text: "A high-altitude nature area with wide valley views."
         },
         {
-                "title": "Sehlabathebe",
-                "cat": "Adventure",
-                "img": "destination-sehlabathebe.jpg",
-                "alt": "Still water reflecting the sky at Sehlabathebe",
-                "text": "A quiet, remote area that suits hikers and nature lovers."
+            title: "Sehlabathebe",
+            cat: "Adventure",
+            img: "destination-sehlabathebe.jpg",
+            alt: "Still water reflecting the sky at Sehlabathebe",
+            text: "A quiet, remote area that suits hikers and nature lovers."
         },
         {
-                "title": "Thaba-Bosiu",
-                "cat": "Culture",
-                "img": "destination-thaba-bosiu.jpg",
-                "alt": "Thaba-Bosiu flat-topped mountain in the countryside",
-                "text": "A historic mountain linked to the story of the Basotho nation."
+            title: "Thaba-Bosiu",
+            cat: "Culture",
+            img: "destination-thaba-bosiu.jpg",
+            alt: "Thaba-Bosiu flat-topped mountain in the countryside",
+            text: "A historic mountain linked to the story of the Basotho nation."
         }
-];
+    ];
 
-    /* ---------- 2 + 3 + 4. SEARCH, FILTER, DYNAMIC CARDS, PAGINATION ---------- */
     const search = $("#destinationSearch");
     const message = $("#searchMessage");
     const grid = $("#destinationGrid");
-    let category = "All", query = "", page = 1;
+    let category = "All";
+    let query = "";
+    let page = 1;
     const PAGE_SIZE = 6;
 
     function say(count) {
         if (!message) return;
-        message.textContent = (query || category !== "All")
-            ? (count ? count + (count === 1 ? " destination found." : " destinations found.")
-                     : "No destinations found. Try another word or category.")
-            : "";
+
+        if (!query && category === "All") {
+            message.textContent = "";
+        } else if (count === 0) {
+            message.textContent = "No destinations found. Try another word or category.";
+        } else if (count === 1) {
+            message.textContent = "1 destination found.";
+        } else {
+            message.textContent = count + " destinations found.";
+        }
     }
 
     function renderDestinations() {
@@ -144,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function filterStatic() {
-        // Index cards and gallery items
         let visible = 0;
         $$(".destination-item").forEach(item => {
             const hay = ((item.dataset.search || "") + " " + item.textContent).toLowerCase();
@@ -158,22 +173,33 @@ document.addEventListener("DOMContentLoaded", function () {
         say(visible);
     }
 
+    function refresh() {
+        if (grid) {
+            renderDestinations();
+        } else {
+            filterStatic();
+        }
+    }
+
     if (grid) renderDestinations();
     if (search) {
         search.addEventListener("input", function () {
             query = search.value.trim().toLowerCase();
             page = 1;
-            grid ? renderDestinations() : filterStatic();
+            refresh();
         });
     }
     $$(".filter-btn").forEach(btn => {
         btn.addEventListener("click", function () {
-            $$(".filter-btn").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed", "false"); });
+            $$(".filter-btn").forEach(b => {
+                b.classList.remove("active");
+                b.setAttribute("aria-pressed", "false");
+            });
             btn.classList.add("active");
             btn.setAttribute("aria-pressed", "true");
             category = btn.dataset.filter;
             page = 1;
-            grid ? renderDestinations() : filterStatic();
+            refresh();
         });
     });
     const pager = $("#destPagination");
@@ -187,7 +213,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* ---------- 6. GALLERY LIGHTBOX ---------- */
     const lightbox = $("#lightbox");
     if (lightbox && window.bootstrap) {
         const modal = new bootstrap.Modal(lightbox);
@@ -211,35 +236,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* ---------- 7. BOOKING COST CALCULATOR (sample prices) ---------- */
     const cost = $("#costSummary");
     let updateCost = () => {};
     if (cost) {
-        const PRICES = { "Maletsunyane Falls": 850, "Maloti Mountains": 700, "Basotho Culture": 500, "Katse Dam": 900, "Other": 600 };
-        const dest = $("#preferredDestination"), guests = $("#guests"), nights = $("#nights");
+        const PRICES = {
+            "Maletsunyane Falls": 850,
+            "Maloti Mountains": 700,
+            "Basotho Culture": 500,
+            "Katse Dam": 900,
+            "Other": 600
+        };
+        const dest = $("#preferredDestination");
+        const guests = $("#guests");
+        const nights = $("#nights");
         updateCost = function () {
-            const p = PRICES[dest.value], g = Number(guests.value), n = Number(nights.value);
-            cost.textContent = p && g > 0 && n > 0
-                ? "Estimated cost: M" + (p * g * n).toLocaleString() + " (M" + p + " per person per night, sample rate)"
-                : "Choose a destination, guests and nights to see an estimate.";
+            const price = PRICES[dest.value];
+            const guestCount = Number(guests.value);
+            const nightCount = Number(nights.value);
+
+            if (price && guestCount > 0 && nightCount > 0) {
+                const total = (price * guestCount * nightCount).toLocaleString();
+                cost.textContent = "Estimated cost: M" + total + " (M" + price + " per person per night, sample rate)";
+            } else {
+                cost.textContent = "Choose a destination, guests and nights to see an estimate.";
+            }
         };
         [dest, guests, nights].forEach(el => el.addEventListener("input", updateCost));
         updateCost();
     }
 
-    /* ---------- 5. FORM VALIDATION ---------- */
     const today = new Date();
-    const iso = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const iso = today.getFullYear() + "-" + month + "-" + day;
     $$('input[type="date"]').forEach(d => { d.min = iso; });
+
+    const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const PHONE_PATTERN = /^\+?[0-9\s-]{7,15}$/;
 
     function check(f) {
         const v = f.value.trim();
         if (f.required && !v) return "This field is required.";
-        if (f.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Enter a valid email, for example name@example.com.";
-        if (f.type === "tel" && v && !/^\+?[0-9\s-]{7,15}$/.test(v)) return "Enter a valid phone number (7 to 15 digits).";
+        if (f.type === "email" && v && !EMAIL_PATTERN.test(v)) return "Enter a valid email, for example name@example.com.";
+        if (f.type === "tel" && v && !PHONE_PATTERN.test(v)) return "Enter a valid phone number (7 to 15 digits).";
         if (f.dataset.min && v && v.length < Number(f.dataset.min)) return "Enter at least " + f.dataset.min + " characters.";
         if (f.type === "date" && v && f.min && v < f.min) return "Choose today or a future date.";
-        if (f.type === "number" && v && (Number(v) < Number(f.min) || Number(v) > Number(f.max))) return "Enter a number from " + f.min + " to " + f.max + ".";
+        if (f.type === "number" && v && (Number(v) < Number(f.min) || Number(v) > Number(f.max))) {
+            return "Enter a number from " + f.min + " to " + f.max + ".";
+        }
         return "";
     }
     function mark(f) {
@@ -274,8 +318,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const nameField = fields.find(f => /name/i.test(f.id));
             const name = nameField ? nameField.value.trim() : "friend";
             store.set("visitorName", name);
-            const text = "Thank you, " + name + ". Your " + (form.id === "bookingForm" ? "enquiry" : "message") +
-                " is ready. This is a demonstration form, so nothing was sent.";
+            const kind = form.id === "bookingForm" ? "enquiry" : "message";
+            const text = "Thank you, " + name + ". Your " + kind + " is ready. This is a demonstration form, so nothing was sent.";
             status.className = "form-status alert alert-success mt-3";
             status.textContent = text;
             if (form.id === "bookingForm" && window.bootstrap) {
@@ -286,7 +330,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    /* ---------- 8. SAVED VISITOR NAME (localStorage) ---------- */
     const saved = store.get("visitorName");
     if (saved) {
         const welcome = $("#welcomeBack");
@@ -294,7 +337,6 @@ document.addEventListener("DOMContentLoaded", function () {
         $$("#visitorName, #contactName").forEach(f => { f.value = saved; });
     }
 
-    /* ---------- 9. INTERACTIVE NAVIGATION + BACK TO TOP ---------- */
     $$("#mainNavigation .nav-link:not(.dropdown-toggle), #mainNavigation .dropdown-item").forEach(link => {
         link.addEventListener("click", () => {
             const menu = $("#mainNavigation");
